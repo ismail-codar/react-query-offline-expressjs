@@ -21,14 +21,10 @@ app.use(cors());
 
 const port = 3020;
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
-
 app.get("/movies", (req, res, ctx) => {
   res.json({
     ts: Date.now(),
-    movies: movies.map(({ id, title }) => ({ id, title })),
+    movies: movies.map(({ id, title, comment }) => ({ id, title, comment })),
   });
 });
 

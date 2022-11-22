@@ -127,8 +127,9 @@ function List() {
           {moviesQuery.data.movies.map((movie) => (
             <li key={movie.id}>
               <Link to={`./${movie.id}`} preload>
-                {movie.title}
+                {movie.title}<br/>
               </Link>
+              {movie.comment}<br/>
             </li>
           ))}
         </ul>
