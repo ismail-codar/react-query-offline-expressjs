@@ -1,1 +1,7 @@
-# react-query-offline-expressjs
+# Example
+
+To run this example:
+
+- `npm install`
+- `npm run dev`
+- `npm run server`
