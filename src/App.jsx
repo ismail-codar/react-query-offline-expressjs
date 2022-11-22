@@ -36,6 +36,9 @@ const queryClient = new QueryClient({
       staleTime: 2000,
       retry: Infinity,
     },
+    mutations: {
+      retry: Infinity,
+    }
   },
   // configure global cache callbacks to show toast notifications
   mutationCache: new MutationCache({
