@@ -1,19 +1,17 @@
 import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
+import { faker } from "@faker-js/faker";
 
-const movies = [
-  {
-    id: "1",
-    title: "Guardians of the Galaxy",
-    comment: "",
-  },
-  {
-    id: "2",
-    title: "Wall-E",
-    comment: "",
-  },
-];
+const largedata = [];
+
+for (let i = 0; i < 50000; i++) {
+  largedata.push({
+    id: i,
+    title: faker.name.fullName(),
+    comment: Math.random().toString(36),
+  });
+}
 
 const app = express();
 app.use(bodyParser.json());
@@ -21,38 +19,45 @@ app.use(cors());
 
 const port = 3020;
 
-app.get("/movies", (req, res, ctx) => {
-  res.json({
-    ts: Date.now(),
-    movies: movies.map(({ id, title, comment }) => ({ id, title, comment })),
-  });
+app.get("/largedata", (req, res, ctx) => {
+  console.log("loading...");
+  setTimeout(() => {
+    res.json({
+      ts: Date.now(),
+      largedata: largedata.map(({ id, title, comment }) => ({
+        id,
+        title,
+        comment,
+      })),
+    });
+  }, 15000);
 });
 
-app.get("/movies/:id", (req, res, ctx) => {
+app.get("/largedata/:id", (req, res, ctx) => {
   const { id } = req.params;
 
-  const movie = movies.find((movie) => movie.id === id);
-  if (!movie) {
-    res.status(404).send(`Movie with id ${id} not found`);
+  const item = largedata.find((item) => item.id === id);
+  if (!item) {
+    res.status(404).send(`Data with id ${id} not found`);
   }
   res.json({
     ts: Date.now(),
-    movie,
+    item,
   });
 });
 
-app.post("/movies/:id", (req, res, ctx) => {
+app.post("/largedata/:id", (req, res, ctx) => {
   const { id } = req.params;
   const { comment } = req.body as any;
 
-  movies.forEach((movie) => {
-    if (movie.id === id) {
-      movie.comment = comment.toUpperCase();
+  largedata.forEach((item) => {
+    if (item.id === id) {
+      item.comment = comment.toUpperCase();
     }
   });
 
   res.json({
-    message: `Successfully updated movie ${id}`,
+    message: `Successfully updated item ${id}`,
   });
 });
 

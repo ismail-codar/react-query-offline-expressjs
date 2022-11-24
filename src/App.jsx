@@ -21,7 +21,7 @@ import {
 } from "@tanstack/react-location";
 
 import * as api from "./api";
-import { movieKeys, useMovie } from "./movies";
+import { itemKeys, useData } from "./largedata";
 
 const persister = createSyncStoragePersister({
   storage: window.localStorage,
@@ -52,11 +52,11 @@ const queryClient = new QueryClient({
 });
 
 // we need a default mutation function so that paused mutations can resume after a page reload
-queryClient.setMutationDefaults(movieKeys.all(), {
+queryClient.setMutationDefaults(itemKeys.all(), {
   mutationFn: async ({ id, comment }) => {
     // to avoid clashes with our optimistic update when an offline mutation continues
-    await queryClient.cancelQueries(movieKeys.detail(id));
-    return api.updateMovie(id, comment);
+    await queryClient.cancelQueries(itemKeys.detail(id));
+    return api.updateData(id, comment);
   },
 });
 
@@ -72,13 +72,13 @@ export default function App() {
         });
       }}
     >
-      <Movies />
-      <ReactQueryDevtools initialIsOpen />
+      <LargeData />
+      <ReactQueryDevtools />
     </PersistQueryClientProvider>
   );
 }
 
-function Movies() {
+function LargeData() {
   const isRestoring = useIsRestoring();
   return (
     <Router
@@ -89,16 +89,16 @@ function Movies() {
           element: <List />,
         },
         {
-          path: ":movieId",
+          path: ":itemId",
           element: <Detail />,
-          errorElement: <MovieError />,
-          loader: ({ params: { movieId } }) =>
-            queryClient.getQueryData(movieKeys.detail(movieId)) ??
+          errorElement: <DataError />,
+          loader: ({ params: { itemId } }) =>
+            queryClient.getQueryData(itemKeys.detail(itemId)) ??
             // do not load if we are offline or hydrating because it returns a promise that is pending until we go online again
             // we just let the Detail component handle it
             (onlineManager.isOnline() && !isRestoring
-              ? queryClient.fetchQuery(movieKeys.detail(movieId), () =>
-                  api.fetchMovie(movieId)
+              ? queryClient.fetchQuery(itemKeys.detail(itemId), () =>
+                  api.fetchData(itemId)
                 )
               : undefined),
         },
@@ -111,35 +111,29 @@ function Movies() {
 }
 
 function List() {
-  const moviesQuery = useQuery(movieKeys.list(), api.fetchMovies);
+  const largeDataQuery = useQuery(itemKeys.list(), api.fetchLargeData);
 
-  if (moviesQuery.isLoading && moviesQuery.isFetching) {
+  if (largeDataQuery.isLoading && largeDataQuery.isFetching) {
     return "Loading...";
   }
 
-  if (moviesQuery.data) {
+  if (largeDataQuery.data) {
     return (
       <div>
-        <h1>Movies</h1>
-        <p>
-          Try to mock offline behaviour with the button in the devtools. You can
-          navigate around as long as there is already data in the cache. You'll
-          get a refetch as soon as you go online again.
-        </p>
-        <ul>
-          {moviesQuery.data.movies.map((movie) => (
-            <li key={movie.id}>
-              <Link to={`./${movie.id}`} preload>
-                {movie.title}<br/>
+        <ul style={{overflow:"auto", maxHeight:"500px"}}>
+          {largeDataQuery.data.largedata.map((item) => (
+            <li key={item.id}>
+              <Link to={`./${item.id}`} preload>
+                {item.id}- {item.title}<br/>
               </Link>
-              {movie.comment}<br/>
+              {item.comment}<br/>
             </li>
           ))}
         </ul>
         <div>
-          Updated at: {new Date(moviesQuery.data.ts).toLocaleTimeString()}
+          Updated at: {new Date(largeDataQuery.data.ts).toLocaleTimeString()}
         </div>
-        <div>{moviesQuery.isFetching && "fetching..."}</div>
+        <div>{largeDataQuery.isFetching && "fetching..."}</div>
       </div>
     );
   }
@@ -148,13 +142,13 @@ function List() {
   return null;
 }
 
-function MovieError() {
+function DataError() {
   const { error } = useMatch();
 
   return (
     <div>
       <Link to="..">Back</Link>
-      <h1>Couldn't load movie!</h1>
+      <h1>Couldn't load item!</h1>
       <div>{error.message}</div>
     </div>
   );
@@ -162,28 +156,28 @@ function MovieError() {
 
 function Detail() {
   const {
-    params: { movieId },
+    params: { itemId },
   } = useMatch();
-  const { comment, setComment, updateMovie, movieQuery } = useMovie(movieId);
+  const { comment, setComment, updateData, itemQuery } = useData(itemId);
 
-  if (movieQuery.isLoading && movieQuery.isFetching) {
+  if (itemQuery.isLoading && itemQuery.isFetching) {
     return "Loading...";
   }
 
   function submitForm(event) {
     event.preventDefault();
 
-    updateMovie.mutate({
-      id: movieId,
+    updateData.mutate({
+      id: itemId,
       comment,
     });
   }
 
-  if (movieQuery.data) {
+  if (itemQuery.data) {
     return (
       <form onSubmit={submitForm}>
         <Link to="..">Back</Link>
-        <h1>Movie: {movieQuery.data.movie.title}</h1>
+        <h1>Data: {itemQuery.data.item.title}</h1>
         <p>
           Try to mock offline behaviour with the button in the devtools, then
           update the comment. The optimistic update will succeed, but the actual
@@ -205,19 +199,19 @@ function Detail() {
         </p>
         <button type="submit">Submit</button>
         <div>
-          Updated at: {new Date(movieQuery.data.ts).toLocaleTimeString()}
+          Updated at: {new Date(itemQuery.data.ts).toLocaleTimeString()}
         </div>
-        <div>{movieQuery.isFetching && "fetching..."}</div>
+        <div>{itemQuery.isFetching && "fetching..."}</div>
         <div>
-          {updateMovie.isPaused
+          {updateData.isPaused
             ? "mutation paused - offline"
-            : updateMovie.isLoading && "updating..."}
+            : updateData.isLoading && "updating..."}
         </div>
       </form>
     );
   }
 
-  if (movieQuery.isPaused) {
+  if (itemQuery.isPaused) {
     return "We're offline and have no data to show :(";
   }
 
