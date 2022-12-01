@@ -18,11 +18,13 @@ export const useData = (itemId) => {
 
   const [comment, setComment] = React.useState();
 
-  const updateData = useMutation({
+  const updateData = useMutation<any, any, any, { previousData }>({
     mutationKey: itemKeys.detail(itemId),
     onMutate: async () => {
       await queryClient.cancelQueries(itemKeys.detail(itemId));
-      const previousData = queryClient.getQueryData(itemKeys.detail(itemId));
+      const previousData = queryClient.getQueryData<any>(
+        itemKeys.detail(itemId)
+      );
 
       // remove local state so that server state is taken instead
       setComment(undefined);
@@ -38,7 +40,7 @@ export const useData = (itemId) => {
       return { previousData };
     },
     onError: (_, __, context) => {
-      queryClient.setQueryData(itemKeys.detail(itemId), context.previousData);
+      queryClient.setQueryData(itemKeys.detail(itemId), context?.previousData);
     },
     onSettled: () => {
       queryClient.invalidateQueries(itemKeys.detail(itemId));
