@@ -12,16 +12,17 @@ export const itemKeys = {
 export const useData = (itemId) => {
   const queryClient = useQueryClient();
 
-  const itemQuery = useQuery(itemKeys.detail(itemId), () =>
-    api.fetchData(itemId)
-  );
+  const itemQuery = useQuery({
+    queryKey: itemKeys.detail(itemId),
+    queryFn: () => api.fetchData(itemId),
+  });
 
   const [comment, setComment] = React.useState();
 
   const updateData = useMutation<any, any, any, { previousData }>({
     mutationKey: itemKeys.detail(itemId),
     onMutate: async () => {
-      await queryClient.cancelQueries(itemKeys.detail(itemId));
+      await queryClient.cancelQueries({ queryKey: itemKeys.detail(itemId) });
       const previousData = queryClient.getQueryData<any>(
         itemKeys.detail(itemId)
       );
@@ -43,7 +44,7 @@ export const useData = (itemId) => {
       queryClient.setQueryData(itemKeys.detail(itemId), context?.previousData);
     },
     onSettled: () => {
-      queryClient.invalidateQueries(itemKeys.detail(itemId));
+      queryClient.invalidateQueries({ queryKey: itemKeys.detail(itemId) });
     },
   });
 

@@ -97,9 +97,12 @@ function LargeData() {
             // do not load if we are offline or hydrating because it returns a promise that is pending until we go online again
             // we just let the Detail component handle it
             (onlineManager.isOnline() && !isRestoring
-              ? queryClient.fetchQuery(itemKeys.detail(itemId), () =>
+              ? queryClient.fetchQuery({
+                queryKey: itemKeys.detail(itemId),
+                queryFn: () =>
                   api.fetchData(itemId)
-                )
+              }
+              )
               : undefined),
         },
       ]}
@@ -111,7 +114,10 @@ function LargeData() {
 }
 
 function List() {
-  const largeDataQuery = useQuery(itemKeys.list(), api.fetchLargeData);
+  const largeDataQuery = useQuery({
+    queryKey: itemKeys.list(),
+    queryFn: api.fetchLargeData
+  });
 
   if (largeDataQuery.isLoading && largeDataQuery.isFetching) {
     return "Loading...";
@@ -120,13 +126,13 @@ function List() {
   if (largeDataQuery.data) {
     return (
       <div>
-        <ul style={{overflow:"auto", maxHeight:"500px"}}>
+        <ul style={{ overflow: "auto", maxHeight: "500px" }}>
           {largeDataQuery.data.largedata.map((item) => (
             <li key={item.id}>
               <Link to={`./${item.id}`} preload>
-                {item.id}- {item.title}<br/>
+                {item.id}- {item.title}<br />
               </Link>
-              {item.comment}<br/>
+              {item.comment}<br />
             </li>
           ))}
         </ul>

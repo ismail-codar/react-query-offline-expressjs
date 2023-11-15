@@ -8,7 +8,7 @@ const largedata = [];
 for (let i = 0; i < 50000; i++) {
   largedata.push({
     id: i,
-    title: faker.name.fullName(),
+    title: faker.person.fullName(),
     comment: Math.random().toString(36),
   });
 }
@@ -30,11 +30,11 @@ app.get("/largedata", (req, res, ctx) => {
         comment,
       })),
     });
-  }, 15000);
+  }, 1500);
 });
 
 app.get("/largedata/:id", (req, res, ctx) => {
-  const { id } = req.params;
+  const id = Number(req.params.id);
 
   const item = largedata.find((item) => item.id === id);
   if (!item) {
@@ -47,8 +47,9 @@ app.get("/largedata/:id", (req, res, ctx) => {
 });
 
 app.post("/largedata/:id", (req, res, ctx) => {
-  const { id } = req.params;
-  const { comment } = req.body as any;
+  const id = Number(req.params.id);
+  const { comment } = req.body;
+  console.log(req.body);
 
   largedata.forEach((item) => {
     if (item.id === id) {
